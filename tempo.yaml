@@ -10,14 +10,6 @@ distributor:
         http:
           endpoint: 0.0.0.0:4318
 
-ingester:
-  trace_idle_period: 10s
-  max_block_duration: 5m
-
-compactor:
-  compaction:
-    block_retention: 24h
-
 storage:
   trace:
     backend: local
@@ -25,6 +17,11 @@ storage:
       path: /tmp/tempo/wal
     local:
       path: /tmp/tempo/blocks
+
+overrides:
+  defaults:
+    compaction:
+      block_retention: 24h
 
 usage_report:
   reporting_enabled: false
