@@ -32,9 +32,8 @@ storage:
       path: /var/tempo/blocks
 
 overrides:
-  defaults:
-    metrics_generator:
-      processors: [service-graphs, span-metrics]
+  metrics_generator:
+    processors: [service-graphs, span-metrics]
 
 usage_report:
   reporting_enabled: false
