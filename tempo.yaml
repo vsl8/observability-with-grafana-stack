@@ -11,13 +11,6 @@ distributor:
         http:
           endpoint: 0.0.0.0:4318
 
-ingester:
-  max_block_duration: 5m
-
-compactor:
-  compaction:
-    compacted_block_retention: 24h
-
 metrics_generator:
   registry:
     external_labels:
@@ -27,6 +20,8 @@ metrics_generator:
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
 
 storage:
   trace:
@@ -36,13 +31,10 @@ storage:
     local:
       path: /var/tempo/blocks
 
-querier:
-  frontend_worker:
-    frontend_address: tempo:9095
-
-query_frontend:
-  search:
-    max_duration: 0
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]
 
 usage_report:
   reporting_enabled: false
