@@ -1,0 +1,100 @@
+////////////////////////////////////////////////////////////////////////////////
+// Discovery
+////////////////////////////////////////////////////////////////////////////////
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Only scrape containers that explicitly opt in with label `metrics=true`.
+// Add the label in docker-compose under `labels:` for any container that
+// actually exposes a Prometheus /metrics endpoint on its discovered port.
+discovery.relabel "metrics_targets" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_metrics"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Metrics
+////////////////////////////////////////////////////////////////////////////////
+
+prometheus.scrape "docker_metrics" {
+  targets    = discovery.relabel.metrics_targets.output
+  forward_to = [prometheus.remote_write.prom_metrics.receiver]
+}
+
+prometheus.remote_write "prom_metrics" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Logs
+////////////////////////////////////////////////////////////////////////////////
+
+loki.relabel "docker_logs" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "docker_logs" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  forward_to    = [loki.write.loki_logs.receiver]
+  relabel_rules = loki.relabel.docker_logs.rules
+}
+
+loki.write "loki_logs" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Traces (OTLP in -> Tempo)
+////////////////////////////////////////////////////////////////////////////////
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
