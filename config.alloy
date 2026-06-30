@@ -144,7 +144,7 @@ loki.process "format_otlp_logs" {
 
   stage.template {
     source   = "formatted_log"
-    template = "[{{ .severity | ToUpper }}] {{ if .trace_id }}traceID={{ .trace_id }} {{ end }}{{ if .span_id }}spanID={{ .span_id }} {{ end }}{{ .body }}"
+    template = "[{{ .severity | ToUpper }}] {{ .body }}"
   }
 
   stage.output {
