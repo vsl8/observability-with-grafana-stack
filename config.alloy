@@ -117,9 +117,38 @@ otelcol.exporter.prometheus "default" {
   forward_to = [prometheus.remote_write.prom_metrics.receiver]
 }
 
-// Export logs to Loki
+// Export logs to Loki with proper formatting
 otelcol.exporter.loki "otlp_logs" {
+  forward_to = [loki.process.format_otlp_logs.receiver]
+}
+
+// Process and format OTLP logs for better readability
+loki.process "format_otlp_logs" {
   forward_to = [loki.write.loki_logs.receiver]
+
+  stage.json {
+    expressions = {
+      body       = "body",
+      severity   = "severity",
+      trace_id   = "traceid",
+      span_id    = "spanid",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level = "severity",
+    }
+  }
+
+  stage.template {
+    source   = "formatted_log"
+    template = "[{{ .severity | ToUpper }}] {{ if .trace_id }}traceID={{ .trace_id }} {{ end }}{{ if .span_id }}spanID={{ .span_id }} {{ end }}{{ .body }}"
+  }
+
+  stage.output {
+    source = "formatted_log"
+  }
 }
 
 // Export traces to Tempo
