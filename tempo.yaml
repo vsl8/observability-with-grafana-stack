@@ -16,7 +16,7 @@ ingester:
 
 compactor:
   compaction:
-    block_retention: 24h
+    compacted_block_retention: 24h
 
 metrics_generator:
   registry:
@@ -42,12 +42,7 @@ querier:
 
 query_frontend:
   search:
-    max_duration: 0s
-
-overrides:
-  defaults:
-    compaction:
-      block_retention: 24h
+    max_duration: 0
 
 usage_report:
   reporting_enabled: false

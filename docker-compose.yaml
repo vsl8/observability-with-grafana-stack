@@ -53,8 +53,6 @@ services:
     ports:
       - "3200:3200"   # tempo http
       - "9095:9095"   # tempo grpc
-      - "4317:4317"   # otlp grpc
-      - "4318:4318"   # otlp http
 
   alloy:
     image: grafana/alloy:latest
@@ -72,8 +70,8 @@ services:
       - monitoring
     ports:
       - "12345:12345"   # alloy ui / self metrics
-      - "4319:4317"     # alloy otlp grpc (host-side mapped to avoid clash with tempo)
-      - "4320:4318"     # alloy otlp http
+      - "4317:4317"     # alloy otlp grpc (host-side mapped to avoid clash with tempo)
+      - "4318:4318"     # alloy otlp http
 
   grafana:
     image: grafana/grafana:latest
