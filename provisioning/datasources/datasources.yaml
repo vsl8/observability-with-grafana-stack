@@ -47,11 +47,10 @@ datasources:
         tags:
           - key: service.name
             value: service
-          - key: job
-          - key: instance
-          - key: container
         filterByTraceID: true
         filterBySpanID: false
+        customQuery: true
+        query: '{trace_id="$${__trace.traceId}"}'
       tracesToMetrics:
         datasourceUid: prometheus
       serviceMap:

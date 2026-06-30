@@ -117,12 +117,12 @@ otelcol.exporter.prometheus "default" {
   forward_to = [prometheus.remote_write.prom_metrics.receiver]
 }
 
-// Export logs to Loki with proper formatting
+// Export logs to Loki with trace context preservation
 otelcol.exporter.loki "otlp_logs" {
   forward_to = [loki.process.format_otlp_logs.receiver]
 }
 
-// Process and format OTLP logs for better readability
+// Process and format OTLP logs while preserving trace context
 loki.process "format_otlp_logs" {
   forward_to = [loki.write.loki_logs.receiver]
 
@@ -137,7 +137,8 @@ loki.process "format_otlp_logs" {
 
   stage.labels {
     values = {
-      level = "severity",
+      level    = "severity",
+      trace_id = "trace_id",
     }
   }
 
