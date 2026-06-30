@@ -1,3 +1,5 @@
+stream_over_http_enabled: true
+
 server:
   http_listen_port: 3200
   grpc_listen_port: 9095
@@ -20,8 +22,6 @@ metrics_generator:
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
-  traces_storage:
-    path: /var/tempo/generator/traces
 
 storage:
   trace:
@@ -32,8 +32,9 @@ storage:
       path: /var/tempo/blocks
 
 overrides:
-  metrics_generator:
-    processors: [service-graphs, span-metrics]
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]
 
 usage_report:
   reporting_enabled: false
