@@ -46,8 +46,8 @@ so once it starts you have metrics ↔ logs ↔ traces correlation out of the bo
 ```
 
 - **Alloy** discovers running Docker containers, scrapes opt-in metrics, ships all
-  container logs to Loki, and accepts OTLP traces (gRPC/HTTP) which it forwards to
-  Tempo.
+  container logs to Loki, accepts OTLP logs (gRPC/HTTP) and forwards them to Loki,
+  and accepts OTLP traces (gRPC/HTTP) which it forwards to Tempo.
 - **Prometheus** has `--web.enable-remote-write-receiver` and exemplar storage
   enabled so it can ingest Alloy’s `prometheus.remote_write` and link metrics →
   traces.
@@ -112,8 +112,19 @@ container port.
 
 ### Logs
 
-Nothing to configure — Alloy tails **every** Docker container’s stdout/stderr via
-the Docker socket and ships them to Loki with a `container=<name>` label.
+Docker stdout/stderr logs require nothing extra — Alloy tails **every** Docker
+container’s stdout/stderr via the Docker socket and ships them to Loki with a
+`container=<name>` label.
+
+OTLP logs can also be sent to Alloy on the same endpoints used for traces:
+
+| Protocol | Endpoint                 |
+|----------|--------------------------|
+| OTLP gRPC | `http://localhost:4319` |
+| OTLP HTTP | `http://localhost:4320` |
+
+Alloy converts incoming OTLP logs to Loki entries and promotes key attributes such
+as `service.name` into Loki labels.
 
 ### Traces (OTLP)
 
@@ -170,8 +181,8 @@ Provisioned out of the box:
   expose a `/metrics` endpoint on the container port?
 - **`Prometheus` remote_write 404** — Make sure Prometheus is started with
   `--web.enable-remote-write-receiver` (already set in this repo).
-- **No traces in Tempo** — Send to `localhost:4319` (Alloy gRPC) or `localhost:4317`
-  (Tempo gRPC). Check Alloy’s UI at http://localhost:12345 → *Components* → the
-  `otelcol.*` nodes should be healthy.
+- **No OTLP data in Alloy** — Send logs/traces to `localhost:4319` (Alloy gRPC) or
+  `localhost:4320` (Alloy HTTP). Check Alloy’s UI at http://localhost:12345 →
+  *Components* → the `otelcol.*` nodes should be healthy.
 - **Loki “too old sample” / schema errors** — `docker compose down -v` to drop the
   Loki volume and start fresh (the schema starts at `2024-01-01`).
