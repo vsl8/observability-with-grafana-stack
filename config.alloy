@@ -68,7 +68,7 @@ loki.write "loki_logs" {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Traces (OTLP in -> Tempo)
+// OTLP Receiver (Logs, Metrics, Traces)
 ////////////////////////////////////////////////////////////////////////////////
 
 otelcol.receiver.otlp "default" {
@@ -80,8 +80,9 @@ otelcol.receiver.otlp "default" {
   }
 
   output {
-    logs   = [otelcol.processor.attributes.otlp_logs.input]
-    traces = [otelcol.processor.batch.default.input]
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.attributes.otlp_logs.input]
+    traces  = [otelcol.processor.batch.default.input]
   }
 }
 
@@ -105,15 +106,23 @@ otelcol.processor.attributes "otlp_logs" {
 
 otelcol.processor.batch "default" {
   output {
-    logs   = [otelcol.exporter.loki.otlp_logs.input]
-    traces = [otelcol.exporter.otlp.tempo.input]
+    metrics = [otelcol.exporter.prometheus.default.input]
+    logs    = [otelcol.exporter.loki.otlp_logs.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
   }
 }
 
+// Export metrics to Prometheus
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.prom_metrics.receiver]
+}
+
+// Export logs to Loki
 otelcol.exporter.loki "otlp_logs" {
   forward_to = [loki.write.loki_logs.receiver]
 }
 
+// Export traces to Tempo
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "tempo:4317"

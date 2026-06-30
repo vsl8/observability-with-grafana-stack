@@ -4,6 +4,21 @@ server:
   http_listen_port: 3100
   grpc_listen_port: 9096
 
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+  chunk_idle_period: 5m
+  chunk_retain_period: 30s
+
 common:
   instance_addr: loki
   path_prefix: /loki

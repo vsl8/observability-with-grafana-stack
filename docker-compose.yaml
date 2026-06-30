@@ -47,6 +47,7 @@ services:
     command: -config.file=/etc/tempo.yaml
     volumes:
       - ./tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/var/tempo
     networks:
       - monitoring
     ports:
