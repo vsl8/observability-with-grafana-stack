@@ -22,6 +22,9 @@ storage:
   trace:
     backend: local
     wal:
-      path: /var/tempo/wal
+      path: /tmp/tempo/wal
     local:
-      path: /var/tempo/blocks
+      path: /tmp/tempo/blocks
+
+usage_report:
+  reporting_enabled: false
